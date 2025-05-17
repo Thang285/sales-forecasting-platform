@@ -1,7 +1,4 @@
 streamlit
 pandas
-psycopg2   
-plotly  
-SQLAlchemy 
-prophet
-joblib
+requests
+plotly
