@@ -1,0 +1,49 @@
+# k8s/streamlit-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: streamlit-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: streamlit
+  template:
+    metadata:
+      labels:
+        app: streamlit
+    spec:
+      containers:
+        - name: streamlit
+          image: streamlit-app:latest
+          ports:
+            - containerPort: 8501
+          env:
+            - name: POSTGRES_HOST
+              value: postgres
+            - name: POSTGRES_DB
+              value: your_database
+            - name: POSTGRES_USER
+              value: your_user
+            - name: POSTGRES_PASSWORD
+              value: your_password
+          volumeMounts:
+            - name: app-code
+              mountPath: /app
+      volumes:
+        - name: app-code
+          hostPath:
+            path: /absolute/path/to/your/project
+            type: Directory
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: streamlit-service
+spec:
+  selector:
+    app: streamlit
+  ports:
+    - port: 80
+      targetPort: 8501
+  type: NodePort
