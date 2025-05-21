@@ -74,7 +74,7 @@ def load_data_to_postgres(df, table_name, host, database, user, password):
 
 def main():
     data_url = "https://archive.ics.uci.edu/ml/machine-learning-databases/00352/Online%20Retail.xlsx"
-    local_file_path = "/home/vietthangtk123/sales_forecasting_platform/data/processed/online_retail.xlsx"
+    local_file_path = "../sales-forecasting-platform/data/processed/online_retail.xlsx"
 
     if not os.path.exists(local_file_path):
         try:
