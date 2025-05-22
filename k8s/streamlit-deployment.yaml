@@ -2,48 +2,50 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: streamlit-deployment
+  name: streamlit-dashboard-deployment
+  labels:
+    app: streamlit-dashboard # This label is used by wait_for_pod_ready
 spec:
-  replicas: 1
+  replicas: 1 # Start with 1, scale up if needed
   selector:
     matchLabels:
-      app: streamlit
+      app: streamlit-dashboard
   template:
     metadata:
       labels:
-        app: streamlit
+        app: streamlit-dashboard
     spec:
       containers:
-        - name: streamlit
-          image: streamlit-app:latest
-          ports:
-            - containerPort: 8501
-          env:
-            - name: POSTGRES_HOST
-              value: postgres
-            - name: POSTGRES_DB
-              value: your_database
-            - name: POSTGRES_USER
-              value: your_user
-            - name: POSTGRES_PASSWORD
-              value: your_password
-          volumeMounts:
-            - name: app-code
-              mountPath: /app
-      volumes:
-        - name: app-code
-          hostPath:
-            path: /absolute/path/to/your/project
-            type: Directory
+      - name: streamlit
+        image: vietthang123tt/will:streamlit-v1   # REPLACE WITH YOUR DOCKER IMAGE
+        # imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8501 # Default Streamlit port
+        env:
+        - name: DB_HOST
+          value: your-app-db.default.svc.cluster.local # Connect to the PG service
+        - name: DB_PORT
+          value: "5432"
+        - name: DB_NAME
+          value: your_database_name
+        - name: DB_USER
+          value: your_app_user
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: your-app-db.your-app-user.credentials # Use the name of the secret you created
+              key: password 
+        # Add any other environment variables your Streamlit app needs
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: streamlit-service
+  name: streamlit-dashboard-service # This name matches DASHBOARD_SERVICE_NAME in setup.sh
 spec:
   selector:
-    app: streamlit
+    app: streamlit-dashboard
   ports:
-    - port: 80
-      targetPort: 8501
-  type: NodePort
+    - protocol: TCP
+      port: 80 # External port for the service
+      targetPort: 8501 # Internal port of the Streamlit container
+  type: NodePort # Or LoadBalancer if on cloud K8s

@@ -53,6 +53,15 @@ async def fetch_data(session: AsyncSession, country: str, freq: str) -> pd.DataF
     grouped.columns = ['ds', 'y']
     return grouped.dropna()
 
+@app.get("/health")
+async def health_check():
+    """
+    Health check endpoint for Kubernetes probes.
+    Returns 200 OK if the API is running.
+    """
+    return {"status": "ok"}
+
+
 # ROUTE
 @app.post("/predict")
 async def predict(req: ForecastRequest):

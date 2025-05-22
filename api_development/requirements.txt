@@ -1,0 +1,9 @@
+# api_development/requirements.txt
+fastapi
+uvicorn[standard]
+pandas
+joblib
+prophet # Meta's Prophet library
+asyncpg # PostgreSQL async driver
+SQLAlchemy # ORM and async engine
+psycopg2-binary # For direct psycopg2 usage if any, or as a fallback for SQLAlchemy

@@ -1,0 +1,33 @@
+# k8s/data-ingestion-job.yaml
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: data-ingestion-job
+  namespace: default
+spec:
+  template:
+    spec:
+      containers:
+      - name: data-ingestion
+        image: your-ingestion-image:latest # Use the image you built
+        env:
+        - name: POSTGRES_HOST
+          value: your-app-db.default.svc.cluster.local # Internal K8s service name
+        - name: POSTGRES_DB
+          value: your_database_name # Matches your PG cluster config
+        - name: POSTGRES_USER
+          value: your_app_user # Matches your PG cluster config
+        - name: POSTGRES_PASSWORD
+          valueFrom: # Get password from the Kubernetes Secret
+            secretKeyRef:
+              name: your-db-secrets # Name of the secret
+              key: app_user_password # Key within the secret
+        resources: # Adjust resources based on your script's needs
+          requests:
+            cpu: "500m"
+            memory: "1Gi"
+          limits:
+            cpu: "1"
+            memory: "2Gi"
+      restartPolicy: OnFailure # If the script fails, retry
+  backoffLimit: 3 # Max number of retries

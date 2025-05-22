@@ -1,0 +1,78 @@
+# k8s/api-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: forecasting-api-deployment # Name of your Deployment
+  namespace: default # Or your application's namespace
+  labels:
+    app: forecasting-api # Label for selecting pods
+spec:
+  replicas: 1 # Start with 1 replica for local testing. Increase for production.
+  selector:
+    matchLabels:
+      app: forecasting-api
+  template:
+    metadata:
+      labels:
+        app: forecasting-api
+    spec:
+      containers:
+      - name: forecasting-api # Name of the container
+        image: vietthang123tt/will:streamlit-v1 
+        imagePullPolicy: Never # **REPLACE with the image name you built**
+        ports:
+        - containerPort: 8000 # Port your Uvicorn server listens on
+        env:
+        # Pass PostgreSQL connection details from the Kubernetes Secret
+        - name: POSTGRES_HOST
+          value: your-app-db.default.svc.cluster.local # Internal K8s service name for PostgreSQL
+        - name: POSTGRES_DB
+          value: your_database_name # Matches your PG cluster config
+        - name: POSTGRES_USER
+          value: your_app_user # Matches your PG cluster config
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: your-app-db.your-app-user.credentials # Use the name of the secret you created
+              key: password  # Key within the secret (e.g., 'app_user_password')
+        resources: # Adjust CPU and memory based on your API's needs and model size
+          requests:
+            cpu: "500m" # Request 0.5 CPU core
+            memory: "1Gi" # Request 1 GiB RAM
+          limits:
+            cpu: "1" # Limit to 1 CPU core
+            memory: "2Gi" # Limit to 2 GiB RAM
+        # Health checks: Crucial for Kubernetes to know if your app is alive and ready to serve traffic
+        livenessProbe: # Checks if the container is still running
+          httpGet:
+            path: /health # Assuming you add a /health endpoint to your FastAPI app
+            port: 8000
+          initialDelaySeconds: 10 # Give the app time to start
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+        readinessProbe: # Checks if the container is ready to accept traffic
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 5
+          periodSeconds: 3
+          timeoutSeconds: 2
+          failureThreshold: 1
+      # If you use a private Docker registry, you'll need to add imagePullSecrets here
+      # imagePullSecrets:
+      # - name: regcred
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: forecasting-api-service # Name for your API service
+  namespace: default # Or your application's namespace
+spec:
+  selector:
+    app: forecasting-api # Selects pods with this label
+  ports:
+    - protocol: TCP
+      port: 80 # The port other services/clients will use to access this API (e.g., dashboard connects to port 80)
+      targetPort: 8000 # The internal port of the API container
+  type: ClusterIP  

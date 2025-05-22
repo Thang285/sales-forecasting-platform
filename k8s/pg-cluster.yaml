@@ -1,0 +1,37 @@
+# k8s/my-pg-cluster.yaml
+apiVersion: "acid.zalan.do/v1"
+kind: postgresql
+metadata:
+  name: your-app-db # KEEP THIS AS 'your-app-db'
+  namespace: default
+spec:
+  teamId: your-team
+  volume:
+    size: 5Gi
+    storageClass: standard # This should be 'standard' for Minikube
+  numberOfInstances: 3
+  users:
+    your-app-user:
+      - superuser
+      - createdb
+  databases:
+    your_database_name: your_app_user
+  postgresql:
+    version: "14"
+    parameters:
+      max_connections: "50"
+      shared_buffers: "64MB"
+      effective_cache_size: "192MB"
+      work_mem: "1MB"
+      maintenance_work_mem: "16MB"
+      log_min_duration_statement: "1000"
+      log_connections: "on"
+      log_disconnections: "on"
+  resources:
+    requests:
+      cpu: "250m"
+      memory: "512Mi"
+    limits:
+      cpu: "500m"
+      memory: "1Gi"
+  # (Optional: Add PgBouncer here if you want it)
