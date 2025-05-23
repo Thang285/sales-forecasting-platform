@@ -18,8 +18,8 @@ spec:
     spec:
       containers:
       - name: forecasting-api # Name of the container
-        image: vietthang123tt/will:streamlit-v1 
-        imagePullPolicy: Never # **REPLACE with the image name you built**
+        image: vietthang123tt/will:fastapi-v1
+        # **REPLACE with the image name you built**
         ports:
         - containerPort: 8000 # Port your Uvicorn server listens on
         env:

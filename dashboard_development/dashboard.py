@@ -355,7 +355,7 @@ def main():
 
     if st.session_state.get('authentication_status'):
         authenticator.logout(location="sidebar")
-        st.write(f"Welcome *{st.session_state.get("name")}*")
+        # st.write(f"Welcome *{st.session_state.get('name')}*")
         # Your dashboard content
         st.title("Sales Dashboard")
         st_autorefresh(interval=30 * 1000, key="auto_refresh")
