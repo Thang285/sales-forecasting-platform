@@ -19,18 +19,22 @@ spec:
       containers:
       - name: forecasting-api # Name of the container
         image: vietthang123tt/will:fastapi-v1
+        imagePullPolicy: Always
         # **REPLACE with the image name you built**
         ports:
         - containerPort: 8000 # Port your Uvicorn server listens on
         env:
         # Pass PostgreSQL connection details from the Kubernetes Secret
-        - name: POSTGRES_HOST
+        - name: DB_HOST
           value: your-app-db.default.svc.cluster.local # Internal K8s service name for PostgreSQL
-        - name: POSTGRES_DB
+        - name: DB_NAME
           value: your_database_name # Matches your PG cluster config
-        - name: POSTGRES_USER
-          value: your_app_user # Matches your PG cluster config
-        - name: POSTGRES_PASSWORD
+        - name: DB_USER
+          valueFrom:
+            secretKeyRef:
+              name: your-app-user.your-app-db.credentials.postgresql.acid.zalan.do
+              key: username # Matches your PG cluster config
+        - name: DB_PASSWORD
           valueFrom:
             secretKeyRef:
               name: your-app-user.your-app-db.credentials.postgresql.acid.zalan.do # Use the name of the secret you created
