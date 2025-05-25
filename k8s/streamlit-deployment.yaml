@@ -29,11 +29,14 @@ spec:
         - name: DB_NAME
           value: your_database_name
         - name: DB_USER
-          value: your_app_user
+          valueFrom:
+            secretKeyRef:
+              name: your-app-user.your-app-db.credentials.postgresql.acid.zalan.do
+              key: username
         - name: DB_PASSWORD
           valueFrom:
             secretKeyRef:
-              name: your-app-db.your-app-user.credentials # Use the name of the secret you created
+              name: your-app-user.your-app-db.credentials.postgresql.acid.zalan.do # Use the name of the secret you created
               key: password 
         # Add any other environment variables your Streamlit app needs
 ---
@@ -48,4 +51,5 @@ spec:
     - protocol: TCP
       port: 80 # External port for the service
       targetPort: 8501 # Internal port of the Streamlit container
+      nodePort: 32000
   type: NodePort # Or LoadBalancer if on cloud K8s

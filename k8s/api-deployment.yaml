@@ -33,7 +33,7 @@ spec:
         - name: POSTGRES_PASSWORD
           valueFrom:
             secretKeyRef:
-              name: your-app-db.your-app-user.credentials # Use the name of the secret you created
+              name: your-app-user.your-app-db.credentials.postgresql.acid.zalan.do # Use the name of the secret you created
               key: password  # Key within the secret (e.g., 'app_user_password')
         resources: # Adjust CPU and memory based on your API's needs and model size
           requests:
@@ -75,4 +75,5 @@ spec:
     - protocol: TCP
       port: 80 # The port other services/clients will use to access this API (e.g., dashboard connects to port 80)
       targetPort: 8000 # The internal port of the API container
-  type: ClusterIP  
+      nodePort: 32001
+  type: NodePort  

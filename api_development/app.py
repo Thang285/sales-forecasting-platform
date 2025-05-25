@@ -11,11 +11,11 @@ import os
 import logging
 from sqlalchemy import text
 # CONFIG
-DB_HOST = os.environ.get('POSTGRES_HOST', 'localhost')
-DB_PORT = "5432"
-DB_NAME = os.environ.get('POSTGRES_DB', 'your_database')
-DB_USER = os.environ.get('POSTGRES_USER', 'your_user')
-DB_PASS  = os.environ.get('POSTGRES_PASSWORD', 'your_password')
+DB_HOST = os.environ.get('DB_HOST', 'your-app-db.default.svc.cluster.local')
+DB_NAME = os.environ.get('DB_NAME', 'your_database')
+DB_USER = os.environ.get('DB_USER', 'your_user')
+DB_PASS = os.environ.get('DB_PASSWORD', 'your_password')
+DB_PORT = 5432
 TABLE_NAME = "online_retail_data"
 
 # ASYNC DB setup

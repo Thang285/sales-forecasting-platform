@@ -5,6 +5,8 @@ metadata:
   name: your-app-db # KEEP THIS AS 'your-app-db'
   namespace: default
 spec:
+  allowedSourceRanges:
+    - 0.0.0.0/0
   teamId: your-team
   volume:
     size: 5Gi
@@ -15,7 +17,7 @@ spec:
       - superuser
       - createdb
   databases:
-    your_database_name: your_app_user
+    your_database_name: your-app-user
   postgresql:
     version: "14"
     parameters:

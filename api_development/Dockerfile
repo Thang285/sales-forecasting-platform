@@ -8,16 +8,17 @@ FROM python:3.9-bullseye
 WORKDIR /app
 
 # Copy requirements.txt and install Python dependencies
-COPY requirements.txt .
+COPY api_development/requirements.txt .
+
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Create a directory for models at the root level of the container.
 # This matches the `MODEL_DIR = f"../models"` path in your app.py,
 # assuming your app.py is copied to /app/app.py and models are at repo root.
 RUN mkdir -p /models
-# COPY models/ /models/  
+COPY models /app/models
 # Copy your FastAPI application file
-COPY app.py .
+COPY api_development/app.py .
 
 # Expose the port Uvicorn will listen on (default for FastAPI is 8000)
 EXPOSE 8000

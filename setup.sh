@@ -126,13 +126,13 @@ helm repo add postgres-operator-ui-charts https://opensource.zalando.com/postgre
 helm install postgres-operator-ui postgres-operator-ui-charts/postgres-operator-ui || { echo "Failed to install PostgreSQL Operator."; exit 1; }
 # wait_for_pod_ready "app=postgres-operator" "default"
 
-# 5. Create PostgreSQL Secret
-echo "Creating PostgreSQL user secret..."
-# Using --overwrite=true to update if already exists, --dry-run=client -o yaml | kubectl apply -f - for idempotent creation
-kubectl create secret generic your-app-db.your-app-user.credentials \
-  --from-literal=username=your-app-user \
-  --from-literal=password=your_secret_password || { echo "Failed to create PG secret."; exit 1; }
-echo "PG secret '$PG_SECRET_NAME' created/updated."
+# # 5. Create PostgreSQL Secret
+# echo "Creating PostgreSQL user secret..."
+# # Using --overwrite=true to update if already exists, --dry-run=client -o yaml | kubectl apply -f - for idempotent creation
+# kubectl create secret generic your-app-db.your-app-user.credentials \
+#   --from-literal=username=your-app-user \
+#   --from-literal=password=your_secret_password || { echo "Failed to create PG secret."; exit 1; }
+# echo "PG secret '$PG_SECRET_NAME' created/updated."
 
 # 6. Deploy PostgreSQL Cluster
 echo "Deploying PostgreSQL Cluster..."
@@ -142,10 +142,6 @@ echo "PostgreSQL cluster '$PG_CLUSTER_NAME' is deployed and ready."
 
 # 7. Build and Deploy Docker Images (for Streamlit and API)
 eval $(minikube docker-env) 
-echo "Building Docker image for Streamlit Dashboard..."
-minikube image build -t streamlit-dashboard-image-98167732:latest ./dashboard_development || { echo "Failed to build Streamlit image."; exit 1; }
-echo "Building Docker image for Forecasting API..."
-minikube image build -t forecasting-api-image-98167732:latest ./api_development || { echo "Failed to build API image."; exit 1; }
 
 echo "Deploying Streamlit Dashboard..."
 # Ensure streamlit-deployment.yaml uses image: streamlit-dashboard-image:latest
@@ -160,6 +156,11 @@ eval $(minikube docker-env)
 kubectl apply -f k8s/api-deployment.yaml || { echo "Failed to deploy Forecasting API."; exit 1; }
 wait_for_pod_ready "app=forecasting-api" "$PG_NAMESPACE"
 echo "Forecasting API deployed."
+
+# Ensure api-deployment.yaml uses image: forecasting-api-image:latest
+eval $(minikube docker-env) 
+kubectl apply -f k8s/data-ingestion.yaml || { echo "Failed to deploy data-ingestion"; exit 1; }
+echo "data-ingestion job completed"
 
 echo "--- Setup Complete! ---"
 

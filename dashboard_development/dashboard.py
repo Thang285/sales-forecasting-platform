@@ -44,10 +44,10 @@ authenticator = stauth.Authenticate(
 )
 alt.data_transformers.disable_max_rows()
 # Database connection details
-DB_HOST = os.environ.get('POSTGRES_HOST', 'localhost')
-DB_NAME = os.environ.get('POSTGRES_DB', 'your_database')
-DB_USER = os.environ.get('POSTGRES_USER', 'your_user')
-DB_PASSWORD = os.environ.get('POSTGRES_PASSWORD', 'your_password')
+DB_HOST = os.environ.get('DB_HOST', 'your-app-db.default.svc.cluster.local')
+DB_NAME = os.environ.get('DB_NAME', 'your-app-user')
+DB_USER = os.environ.get('DB_USER', 'your_user')
+DB_PASSWORD = os.environ.get('DB_PASSWORD', 'your_password')
 
 def connect_to_db():
     try:

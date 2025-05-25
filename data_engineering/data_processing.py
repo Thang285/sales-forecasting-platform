@@ -74,17 +74,8 @@ def load_data_to_postgres(df, table_name, host, database, user, password):
 
 def main():
     data_url = "https://archive.ics.uci.edu/ml/machine-learning-databases/00352/Online%20Retail.xlsx"
-    local_file_path = "../sales-forecasting-platform/data/processed/online_retail.xlsx"
+    local_file_path = "./data/processed/online_retail.xlsx"
 
-    if not os.path.exists(local_file_path):
-        try:
-            subprocess.run(["wget", data_url, "-O", local_file_path], check=True)
-            print(f"📥 Downloaded data to {local_file_path}")
-        except subprocess.CalledProcessError as e:
-            print(f"❌ Error downloading the dataset: {e}")
-            exit()
-    else:
-        print(f"📁 File already exists at {local_file_path}")
 
     try:
         df = pd.read_excel(local_file_path)
@@ -131,10 +122,10 @@ def main():
     print(df_from_csv.describe())
     # === PREPROCESSING ENDS HERE ===
 
-    host = os.environ.get('POSTGRES_HOST', 'localhost')
-    database = os.environ.get('POSTGRES_DB', 'your_database')
-    user = os.environ.get('POSTGRES_USER', 'your_user')
-    password = os.environ.get('POSTGRES_PASSWORD', 'your_password')
+    host = os.environ.get('DB_HOST', 'your-app-db.default.svc.cluster.local')
+    database = os.environ.get('DB_NAME', 'your_database')
+    user = os.environ.get('DB_USER', 'your_user')
+    password = os.environ.get('DB_PASSWORD', 'your_password')
 
     load_data_to_postgres(df_from_csv, 'online_retail_data', host, database, user, password)
 

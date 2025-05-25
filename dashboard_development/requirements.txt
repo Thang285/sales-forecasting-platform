@@ -1,8 +1,10 @@
 streamlit
 pandas
-requests
-plotly
-pandas
 psycopg2-binary
+plotly
+streamlit-autorefresh
+altair
+requests
+streamlit-authenticator
+PyYAML
 numpy
-openpyxl    
