@@ -7,3 +7,4 @@ asyncpg # PostgreSQL async driver
 SQLAlchemy # ORM and async engine
 psycopg2-binary 
 statsmodels
+redis

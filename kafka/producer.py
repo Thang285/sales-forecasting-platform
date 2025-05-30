@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 
 # Kafka producer setup
 producer = KafkaProducer(
-    bootstrap_servers='localhost:9092',  # Adjust if using cloud Kafka
+    bootstrap_servers='kafka:9092',  # Adjust if using cloud Kafka
     value_serializer=lambda v: json.dumps(v).encode('utf-8')
 )
 

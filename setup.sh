@@ -8,16 +8,14 @@ PG_NAMESPACE="default"   # Matches namespace in my-pg-cluster.yaml
 DASHBOARD_SERVICE_NAME="streamlit-dashboard-service" # Adjust to your Streamlit Service name
 DASHBOARD_NAMESPACE="default" # Adjust to your Streamlit Service namespace
 PG_SECRET_NAME="your-db-secrets"
-PG_APP_USER_PASSWORD="12345678" # IMPORTANT: Change this! In real setup, would prompt or read from env.
+PG_APP_USER_PASSWORD="12345678"
 
 # --- Helper Functions ---
 
-# Function to check if a command exists
 command_exists() {
     command -v "$1" >/dev/null 2>&1
 }
 
-# Install Docker (required for Minikube Docker driver)
 install_docker() {
     if ! command_exists docker; then
         echo "Docker not found. Installing Docker..."
@@ -25,13 +23,12 @@ install_docker() {
         sudo apt install -y docker.io || { echo "Failed to install docker.io. Aborting."; exit 1; }
         echo "Adding current user to docker group. You might need to log out and back in for changes to take effect."
         sudo usermod -aG docker "$USER" || { echo "Failed to add user to docker group."; }
-        newgrp docker # Apply group change immediately if possible
+        newgrp docker
     else
         echo "Docker is already installed."
     fi
 }
 
-# Install kubectl
 install_kubectl() {
     if ! command_exists kubectl; then
         echo "kubectl not found. Installing kubectl..."
@@ -44,7 +41,6 @@ install_kubectl() {
     fi
 }
 
-# Install Helm
 install_helm() {
     if ! command_exists helm; then
         echo "Helm not found. Installing Helm..."
@@ -55,7 +51,6 @@ install_helm() {
     fi
 }
 
-# Install Minikube
 install_minikube() {
     if ! command_exists minikube; then
         echo "Minikube not found. Installing Minikube..."
@@ -80,7 +75,7 @@ wait_for_pod_ready() {
 
 echo "--- Starting Sales Forecasting Platform Setup ---"
 
-# #  1. Install Prerequisites if missing
+# 1. Install prerequisites if missing
 echo "Checking and installing prerequisites: Docker, kubectl, Helm, Minikube..."
 install_docker
 install_kubectl
@@ -88,11 +83,11 @@ install_helm
 install_minikube
 echo "All prerequisites checked/installed."
 
-# 2. Minikube Setup
+# 2. Start Minikube if not running (3-node cluster)
 echo "Checking Minikube status..."
 if ! minikube status &> /dev/null; then
-    echo "Minikube not running or configured. Starting Minikube..."
-    minikube start --driver=docker --memory ${MINIKUBE_MEMORY} --cpus ${MINIKUBE_CPUS} || { echo "Failed to start Minikube. Ensure Docker is running and you are in the 'docker' group."; exit 1; }
+    echo "Minikube not running or configured. Starting Minikube with 3 nodes..."
+    minikube start --nodes=3 --driver=docker || { echo "Failed to start Minikube. Ensure Docker is running and you are in the 'docker' group."; exit 1; }
 elif [[ $(minikube status -f "{{.Driver}}") != "docker" ]]; then
     echo "Minikube is running with a different driver. Please stop it (minikube stop) and restart with --driver=docker."
     exit 1

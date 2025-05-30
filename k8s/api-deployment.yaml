@@ -1,13 +1,25 @@
-# k8s/api-deployment.yaml
+# PVC for Shared Model Storage
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: model-pvc
+spec:
+  accessModes:
+    - ReadWriteMany  # Multiple pods can read/write
+  resources:
+    requests:
+      storage: 1Gi  # Request for 1 GiB of storage
+---
+# Master API Deployment
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: forecasting-api-deployment # Name of your Deployment
-  namespace: default # Or your application's namespace
+  name: forecasting-api-deployment
+  namespace: default
   labels:
-    app: forecasting-api # Label for selecting pods
+    app: forecasting-api
 spec:
-  replicas: 1 # Start with 1 replica for local testing. Increase for production.
+  replicas: 1
   selector:
     matchLabels:
       app: forecasting-api
@@ -17,45 +29,42 @@ spec:
         app: forecasting-api
     spec:
       containers:
-      - name: forecasting-api # Name of the container
+      - name: forecasting-api
         image: vietthang123tt/will:fastapi-v1
         imagePullPolicy: Always
-        # **REPLACE with the image name you built**
         ports:
-        - containerPort: 8000 # Port your Uvicorn server listens on
+        - containerPort: 8000
         env:
-        # Pass PostgreSQL connection details from the Kubernetes Secret
         - name: DB_HOST
-          value: your-app-db.default.svc.cluster.local # Internal K8s service name for PostgreSQL
+          value: your-app-db.default.svc.cluster.local
         - name: DB_NAME
-          value: your_database_name # Matches your PG cluster config
+          value: your_database_name
         - name: DB_USER
           valueFrom:
             secretKeyRef:
               name: your-app-user.your-app-db.credentials.postgresql.acid.zalan.do
-              key: username # Matches your PG cluster config
+              key: username
         - name: DB_PASSWORD
           valueFrom:
             secretKeyRef:
-              name: your-app-user.your-app-db.credentials.postgresql.acid.zalan.do # Use the name of the secret you created
-              key: password  # Key within the secret (e.g., 'app_user_password')
-        resources: # Adjust CPU and memory based on your API's needs and model size
+              name: your-app-user.your-app-db.credentials.postgresql.acid.zalan.do
+              key: password
+        resources:
           requests:
-            cpu: "500m" # Request 0.5 CPU core
-            memory: "1Gi" # Request 1 GiB RAM
+            cpu: "1000m"
+            memory: "2Gi"
           limits:
-            cpu: "1" # Limit to 1 CPU core
-            memory: "2Gi" # Limit to 2 GiB RAM
-        # Health checks: Crucial for Kubernetes to know if your app is alive and ready to serve traffic
-        livenessProbe: # Checks if the container is still running
+            cpu: "2000m"
+            memory: "4Gi"
+        livenessProbe:
           httpGet:
-            path: /health # Assuming you add a /health endpoint to your FastAPI app
+            path: /health
             port: 8000
-          initialDelaySeconds: 10 # Give the app time to start
+          initialDelaySeconds: 10
           periodSeconds: 5
           timeoutSeconds: 3
           failureThreshold: 3
-        readinessProbe: # Checks if the container is ready to accept traffic
+        readinessProbe:
           httpGet:
             path: /health
             port: 8000
@@ -63,21 +72,91 @@ spec:
           periodSeconds: 3
           timeoutSeconds: 2
           failureThreshold: 1
-      # If you use a private Docker registry, you'll need to add imagePullSecrets here
-      # imagePullSecrets:
-      # - name: regcred
+        volumeMounts:
+          - name: model-storage
+            mountPath: /app/models
+      volumes:
+        - name: model-storage
+          persistentVolumeClaim:
+            claimName: model-pvc
 ---
+# Service for API
 apiVersion: v1
 kind: Service
 metadata:
-  name: forecasting-api-service # Name for your API service
-  namespace: default # Or your application's namespace
+  name: forecasting-api-service
+  namespace: default
 spec:
   selector:
-    app: forecasting-api # Selects pods with this label
+    app: forecasting-api
   ports:
     - protocol: TCP
-      port: 80 # The port other services/clients will use to access this API (e.g., dashboard connects to port 80)
-      targetPort: 8000 # The internal port of the API container
+      port: 80
+      targetPort: 8000
       nodePort: 32001
-  type: NodePort  
+  type: NodePort
+---
+# Worker Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: forecasting-worker-deployment
+  namespace: default
+  labels:
+    app: forecasting-worker
+spec:
+  replicas: 2  # Two worker pods
+  selector:
+    matchLabels:
+      app: forecasting-worker
+  template:
+    metadata:
+      labels:
+        app: forecasting-worker
+    spec:
+      containers:
+      - name: forecasting-worker
+        image: vietthang123tt/will-worker:latest
+        imagePullPolicy: Always
+        command: ["python", "worker.py"]  # Adjust if needed
+        env:
+        - name: DB_HOST
+          value: your-app-db.default.svc.cluster.local
+        - name: DB_NAME
+          value: your_database_name
+        - name: DB_USER
+          valueFrom:
+            secretKeyRef:
+              name: your-app-user.your-app-db.credentials.postgresql.acid.zalan.do
+              key: username
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: your-app-user.your-app-db.credentials.postgresql.acid.zalan.do
+              key: password
+        resources:
+          requests:
+            cpu: "500m"
+            memory: "1Gi"
+          limits:
+            cpu: "1"
+            memory: "2Gi"
+        livenessProbe:
+          exec:
+            command: ["pgrep", "python"]
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          failureThreshold: 3
+        readinessProbe:
+          exec:
+            command: ["pgrep", "python"]
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          failureThreshold: 1
+        volumeMounts:
+          - name: model-storage
+            mountPath: /app/models
+      volumes:
+        - name: model-storage
+          persistentVolumeClaim:
+            claimName: model-pvc

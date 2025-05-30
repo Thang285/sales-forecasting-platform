@@ -1,0 +1,6 @@
+pandas
+joblib
+sqlalchemy[asyncio]
+asyncpg
+statsmodels
+redis
